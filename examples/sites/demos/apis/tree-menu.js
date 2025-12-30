@@ -524,6 +524,20 @@ export default {
           },
           mode: ['pc'],
           pcDemo: 'events'
+        },
+        {
+          name: 'input-change',
+          type: '(data:string) => void',
+          defaultValue: '',
+          desc: {
+            'zh-CN': '输入框输入值时触发的事件',
+            'en-US': 'Event triggered when a value is entered into the input box.'
+          },
+          mode: ['pc'],
+          pcDemo: 'events',
+          meta: {
+            stable: '3.27.0'
+          }
         }
       ],
       methods: [
@@ -646,6 +660,9 @@ interface ITreeNodeData {
   "number"?: number | string
   // 自定义每个节点的图标
   "customIcon": Component 
+  // 节点是否可以点击
+  "disabled"?: string
+ 
 }        
 `
     },
@@ -654,10 +671,10 @@ interface ITreeNodeData {
       type: 'interface',
       code: `
 interface IProps {
-  "label"?: string
-  "children"?: string
-  "disabled": string
-  "isLeaf": string
+  "label": string
+  "children": string
+  "disabled"?: string
+  "isLeaf"?: string
 }        
 `
     },

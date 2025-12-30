@@ -33,7 +33,7 @@ export const switchProps = {
   },
   showText: {
     type: Boolean || undefined,
-    default: undefined
+    default: false
   },
   types: {
     type: String
@@ -69,7 +69,8 @@ export const switchProps = {
   loading: {
     type: Boolean,
     default: false
-  }
+  },
+  width: [Number, String]
 }
 
 export default defineComponent({

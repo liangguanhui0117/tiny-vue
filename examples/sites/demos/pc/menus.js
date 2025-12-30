@@ -10,6 +10,14 @@ export const standaloneMenus = [
 const docMenusChildren = [
   { 'title': '更新日志', 'titleEn': 'Changelog', 'key': 'changelog' },
   { 'title': '环境准备', 'titleEn': 'envpreparation', 'key': 'envpreparation' },
+  {
+    'title': '适配AUI',
+    'titleEn': 'Adapter AUI',
+    'key': 'aui-adapter',
+    showScene: {
+      theme: ['saas']
+    }
+  },
   { 'title': '安装', 'titleEn': 'installation', 'key': 'installation' },
   { 'title': '引入组件', 'titleEn': 'importComponents', 'key': 'import-components' },
   {
@@ -40,7 +48,18 @@ const docMenusChildren = [
   {
     'title': '暗黑模式',
     'titleEn': 'theme-dark',
-    'key': 'theme-dark'
+    'key': 'theme-dark',
+    showScene: {
+      theme: ['default']
+    }
+  },
+  {
+    'title': '全局动效配置',
+    'titleEn': 'motion-configuration',
+    'key': 'motion-configuration',
+    showScene: {
+      theme: ['default']
+    }
   },
   {
     'title': '智能化',
@@ -55,14 +74,6 @@ const docMenusChildren = [
     'key': 'help',
     showScene: {
       target: ['inner']
-    }
-  },
-  {
-    'title': '适配AUI',
-    'titleEn': 'Adapter AUI',
-    'key': 'aui-adapter',
-    showScene: {
-      theme: ['saas']
     }
   }
 ]
@@ -91,7 +102,14 @@ export const cmpMenus = [
       { 'nameCn': '按钮', 'name': 'Button', 'key': 'button' },
       { 'nameCn': '按钮组', 'name': 'ButtonGroup', 'key': 'button-group' },
       { 'nameCn': '全局配置', 'name': 'ConfigProvider', 'key': 'config-provider' },
-      { 'nameCn': '容器布局', 'name': 'Container', 'key': 'container' },
+      {
+        'nameCn': '容器布局',
+        'name': 'Container',
+        'key': 'container',
+        showScene: {
+          theme: ['default']
+        }
+      },
       { 'nameCn': '图标', 'name': 'Icon', 'key': 'icon' },
       // { 'nameCn': '多色图标', 'name': 'IconMulticolor', 'key': 'icon-multicolor' }, // 隐藏路由，目前只有saas使用
       { 'nameCn': '栅格布局', 'name': 'Layout', 'key': 'layout' },
@@ -103,6 +121,14 @@ export const cmpMenus = [
         'key': 'virtual-scroll-box',
         'meta': {
           'stable': '3.19.0'
+        }
+      },
+      {
+        'nameCn': '间距',
+        'name': 'Space',
+        'key': 'space',
+        'meta': {
+          'stable': '3.27.0'
         }
       }
     ]
@@ -145,14 +171,7 @@ export const cmpMenus = [
       { 'nameCn': '文件上传', 'name': 'FileUpload', 'key': 'file-upload' },
       { 'nameCn': '富文本', 'name': 'FluentEditor', 'key': 'fluent-editor' },
       { 'nameCn': '表单', 'name': 'Form', 'key': 'form' },
-      // {
-      //   'nameCn': '下拉表格选择器',
-      //   'name': 'GridSelect',
-      //   'key': 'grid-select',
-      //   'meta': {
-      //     'experimental': '3.20.0'
-      //   }
-      // },
+
       { 'nameCn': '输入框', 'name': 'Input', 'key': 'input' },
       { 'nameCn': ' IP地址输入框', 'name': 'IpAddress', 'key': 'ip-address' },
       { 'nameCn': '数字输入框', 'name': 'Numeric', 'key': 'numeric' },
@@ -171,6 +190,14 @@ export const cmpMenus = [
         'nameCn': '树形选择器',
         'name': 'TreeSelect',
         'key': 'tree-select'
+      },
+      {
+        'nameCn': '下拉表格选择器',
+        'name': 'GridSelect',
+        'key': 'grid-select',
+        'meta': {
+          'experimental': '3.27.0'
+        }
       }
     ]
   },
@@ -273,6 +300,14 @@ export const cmpMenus = [
       { 'nameCn': '警告', 'name': 'Alert', 'key': 'alert' },
       { 'nameCn': '对话框', 'name': 'DialogBox', 'key': 'dialog-box' },
       { 'nameCn': '抽屉', 'name': 'Drawer', 'key': 'drawer' },
+      {
+        'nameCn': '异常页',
+        'name': 'Exception',
+        'key': 'exception',
+        'meta': {
+          'stable': '3.27.0'
+        }
+      },
       { 'nameCn': '加载', 'name': 'Loading', 'key': 'loading' },
       { 'nameCn': '模态框', 'name': 'Modal', 'key': 'modal' },
       { 'nameCn': '通知', 'name': 'Notify', 'key': 'notify' },
@@ -312,8 +347,8 @@ export const cmpMenus = [
       { 'nameCn': '词云图', 'name': 'Wordcloud Chart', 'key': 'chart-wordcloud' },
       { 'nameCn': '旭日图', 'name': 'Sunburst Chart', 'key': 'chart-sunburst' },
       { 'nameCn': '拓扑图', 'name': 'Graph Chart', 'key': 'chart-graph' },
-      { 'nameCn': '百度地图', 'name': 'BaiduMap Chart', 'key': 'chart-baidu-map' },
-      { 'nameCn': '高德地图', 'name': 'Autonavi Chart', 'key': 'chart-autonavi-map' },
+      // { 'nameCn': '百度地图', 'name': 'BaiduMap Chart', 'key': 'chart-baidu-map' },
+      // { 'nameCn': '高德地图', 'name': 'Autonavi Chart', 'key': 'chart-autonavi-map' },
       { 'nameCn': '箱形图', 'name': 'Boxplot Chart', 'key': 'chart-boxplot' },
       { 'nameCn': '进度图', 'name': 'Process Chart', 'key': 'chart-process' }
     ]

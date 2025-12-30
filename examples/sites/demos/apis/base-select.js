@@ -334,6 +334,19 @@ export default {
           pcDemo: 'filter-method'
         },
         {
+          name: 'optimization',
+          type: 'boolean',
+          defaultValue: 'false',
+          desc: {
+            'zh-CN': '是否开启大数据虚拟滚动功能。仅配置式（使用 options 属性）时支持',
+            'en-US':
+              'Whether to enable the big data virtual scrolling feature. Supported only when configured (using the options attribute)'
+          },
+          mode: ['pc', 'mobile-first'],
+          pcDemo: 'optimization',
+          mfDemo: 'optimization'
+        },
+        {
           name: 'options',
           typeAnchorName: 'IOption',
           type: 'IOption[]',
@@ -585,9 +598,9 @@ export default {
           defaultValue: 'false',
           desc: {
             'zh-CN':
-              '是否展示多选框开启多选限制选择数量时，选中条数和限制总条数的占比的文字提示。 该属性的优先级大于<code>show-proportion</code> 属性，同时设置只',
+              '是否展示多选框开启多选限制选择数量时，选中条数和限制总条数的占比的文字提示。 该属性的优先级大于<code>show-proportion</code> 属性。',
             'en-US':
-              'Display the proportion of the number of selected items and the total number of items in the multiple-choice box'
+              'Display the proportion of the number of selected items and the maximum number of options available in the multiple-choice box. This attribute has a higher priority than the <code>show-proportion</code> attribute.'
           },
           mode: ['pc'],
           pcDemo: 'multiple'

@@ -47,7 +47,7 @@ import methods from './methods'
 import GlobalConfig from '../../config'
 import { error } from '../../tools'
 import MfTable from '../../mobile-first/index.vue'
-import { useData, useDrag, useRowGroup } from '../../composable'
+import { useData, useDrag, useRowGroup, useNormalData } from '../../composable'
 import { isServer } from '@opentiny/utils'
 
 const { themes, viewConfig, columnLevelKey, defaultColumnName } = GlobalConfig
@@ -95,7 +95,7 @@ function mergeScrollDirStore(scrollDir, scrollDirStore) {
 function loadStatic(data, _vm) {
   // 此段代码与 watch(data) 功能重复，只在配置了 data 属性后生效
   if (data && data.length > 0) {
-    _vm.loadTableData(data, true)
+    _vm.updateRawData(data)
     _vm.updateStyle()
   }
 }
@@ -346,6 +346,7 @@ export default defineComponent({
         copyed: { columns: [], cut: false, rows: [] },
         indexs: { columns: [] },
         insertList: [],
+        insertMap: new Map(),
         removeList: [],
         // 选中源
         selected: { column: null, row: null },
@@ -360,7 +361,8 @@ export default defineComponent({
         id: '',
         multi: false,
         options: [],
-        visible: false
+        visible: false,
+        searchValue: ''
       },
       // 所有列已禁用
       headerCheckDisabled: false,
@@ -409,9 +411,7 @@ export default defineComponent({
       // 在编辑模式下 单元格在失去焦点验证的状态
       validatedMap: {},
       // 表格父容器的高度
-      parentHeight: 0,
-      // 水平滚动条的状态
-      horizonScroll: { fixed: false, threshold: 2, max: 0, isLeft: true, isRight: false }
+      parentHeight: 0
     }
   },
   computed: {
@@ -545,9 +545,10 @@ export default defineComponent({
     // 选项式监控在vue2可以检测到顶层数组splice项替换/$set项替换
     // array.splice(index, 1, newItem)
     // this.$set(array, index, newItem)
+    // 在数组中的行对象上动态添加字段也会触发此选项式监听
     data(array1, array2) {
       if (isVue2 && array1 === array2 && array1.length === array2.length) {
-        this.handleDataChange()
+        this.updateRawData(this.data)
       }
     }
   },
@@ -564,8 +565,6 @@ export default defineComponent({
       fullColumnMap: new Map(),
       fullDataRowIdData: {},
       fullDataRowMap: new Map(),
-      // 临时插入数据集
-      temporaryRows: [],
       // 最后滚动位置
       lastScrollLeft: 0,
       lastScrollTop: 0,
@@ -658,6 +657,10 @@ export default defineComponent({
     const bodyWrapperMinHeight = hooks.ref()
     // 外部设置的表体容器最大高度
     const bodyWrapperMaxHeight = hooks.ref()
+    // 表格滚动宽度
+    const containerScrollWidth = hooks.ref(0)
+    // 表格滚动高度
+    const containerScrollHeight = hooks.ref(0)
     // 表体表格元素宽度
     const bodyTableWidth = hooks.ref()
     // 滚动加载滚动高度
@@ -683,6 +686,8 @@ export default defineComponent({
       scaleMinList: []
     })
 
+    const horizonScroll = hooks.ref({ fixed: false, threshold: 2, max: 0, isLeft: true, isRight: false })
+
     // body组件参数
     const bodyProps = hooks.computed(() => ({
       collectColumn: collectColumn.value,
@@ -701,6 +706,8 @@ export default defineComponent({
     }))
     // 模板引用
     const tableWrapper = hooks.ref()
+
+    const { rawData, rawDataVersion } = useNormalData({ props, tableFullColumn })
 
     // TINY主题变量
     const tinyTheme = hooks.ref(resolveTheme(props, context))
@@ -739,6 +746,44 @@ export default defineComponent({
 
     const { tiledLength } = useData(props)
 
+    // 监听 horizonScroll.isLeft 和 isRight 的变化，直接操作 DOM 更新 class，避免触发重渲染
+    // 注意：tiny-grid-fixed__left 和 tiny-grid-fixed__right 通过 watch 直接操作 DOM 更新，避免触发重渲染
+    const updateFixedClasses = (isLeft, isRight) => {
+      if (!$table.$el) return
+
+      const el = $table.$el as HTMLElement
+      const hasLeftClass = el.classList.contains('tiny-grid-fixed__left')
+      const hasRightClass = el.classList.contains('tiny-grid-fixed__right')
+      const shouldHaveLeft = !isLeft
+      const shouldHaveRight = !isRight
+
+      // 只在状态真正变化时更新 DOM
+      if (hasLeftClass !== shouldHaveLeft) {
+        if (shouldHaveLeft) {
+          el.classList.add('tiny-grid-fixed__left')
+        } else {
+          el.classList.remove('tiny-grid-fixed__left')
+        }
+      }
+
+      if (hasRightClass !== shouldHaveRight) {
+        if (shouldHaveRight) {
+          el.classList.add('tiny-grid-fixed__right')
+        } else {
+          el.classList.remove('tiny-grid-fixed__right')
+        }
+      }
+    }
+
+    const resolveMap = {}
+
+    hooks.watch(
+      () => [horizonScroll.value?.isLeft, horizonScroll.value?.isRight],
+      ([newIsLeft, newIsRight]) => {
+        hooks.nextTick(() => updateFixedClasses(newIsLeft, newIsRight))
+      }
+    )
+
     hooks.onMounted(() => {
       $table.addIntersectionObserver()
 
@@ -749,7 +794,18 @@ export default defineComponent({
 
       hooks.nextTick(() => {
         $table.afterMounted = true
-
+        // 初始化时设置一次 class
+        setTimeout(() => {
+          if ($table.$el && $table.horizonScroll) {
+            const el = $table.$el as HTMLElement
+            if (!horizonScroll.value?.isLeft) {
+              el.classList.add('tiny-grid-fixed__left')
+            }
+            if (!horizonScroll.value?.isRight) {
+              el.classList.add('tiny-grid-fixed__right')
+            }
+          }
+        })
         if (props.autoResize && TINYGrid._resize) {
           $table.bindResize()
         }
@@ -778,6 +834,7 @@ export default defineComponent({
       unbindEvent($table)
 
       $table._tileInfo = $table._graphInfo = null
+      $table.rowidCacheMap = null
     })
 
     hooks.onActivated(() => {
@@ -798,6 +855,9 @@ export default defineComponent({
 
     const tableListeners = getListeners(attrs, listeners)
 
+    const markColumnIndex = hooks.ref(0)
+
+    const rowidCacheMap = new Map()
     return {
       slots,
       tableListeners,
@@ -825,10 +885,18 @@ export default defineComponent({
       bodyWrapperHeight,
       bodyWrapperMinHeight,
       bodyWrapperMaxHeight,
+      containerScrollWidth,
+      containerScrollHeight,
       bodyTableWidth,
       scrollLoadScrollHeight,
       columnStore,
-      tiledLength
+      tiledLength,
+      rawDataVersion,
+      rawData,
+      markColumnIndex,
+      rowidCacheMap,
+      horizonScroll,
+      resolveMap
     }
   },
   render() {
@@ -867,6 +935,7 @@ export default defineComponent({
           'tiny-grid__group-saas': isThemeSaas && isGroup,
           'tiny-grid__border-vertical': borderVertical,
           'tiny-grid__checked': mouseConfig.checked,
+          'tiny-grid__hover-align': mouseConfig.hover,
           'mark-insert': editConfig && editConfig.markInsert,
           'edit__no-border': editConfig && editConfig.showBorder === false,
           'is__loading': loading,
@@ -874,9 +943,7 @@ export default defineComponent({
           'column__highlight': highlightHoverColumn,
           'is__row-span': (rowSpan && rowSpan.length > 0) || typeof spanMethod === 'function',
           'row__drop-handle--index': dropConfig.rowHandle === 'index',
-          'fixed__sticky': horizonScroll.fixed,
-          'tiny-grid-fixed__left': !horizonScroll.isLeft,
-          'tiny-grid-fixed__right': !horizonScroll.isRight
+          'fixed__sticky': horizonScroll.fixed
         }
       },
       [
@@ -896,7 +963,7 @@ export default defineComponent({
             })
           : null,
         // 加载中
-        h(loadingComponent || GridLoading, { props: { visible: loading }, class: this.viewCls('gridLoading') }),
+        h(GridLoading, { props: { visible: loading, loadingComponent }, class: this.viewCls('gridLoading') }),
         // 筛选、快捷菜单、Tip提示、校验提示
         h(
           'div',

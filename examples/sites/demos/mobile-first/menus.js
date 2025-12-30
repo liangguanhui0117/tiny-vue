@@ -9,6 +9,15 @@ export const docMenus = []
 
 export const cmpMenus = [
   {
+    'label': '基础',
+    'labelEn': 'Basic',
+    'key': 'cmp-frame-style',
+    'children': [
+      { 'nameCn': '按钮', 'name': 'Button', 'key': 'button' },
+      { 'nameCn': '分割线', 'name': 'Divider', 'key': 'divider' }
+    ]
+  },
+  {
     label: '导航组件',
     labelEn: 'Navigation',
     key: 'cmp-navigation-components',
@@ -21,9 +30,6 @@ export const cmpMenus = [
       { name: 'Steps ', nameCn: '步骤条', key: 'steps' },
       { name: 'Tabs ', nameCn: '标签页', key: 'tabs' },
       { name: 'Menu ', nameCn: '菜单', key: 'menu' },
-      { name: 'TimeLine ', nameCn: '时间线', key: 'time-line' },
-      //  测试时打开该行---------------
-      // { name: 'TimeLineNew ', nameCn: '时间线AUI', key: 'time-line-new' },
       { name: 'Dropdown ', nameCn: '下拉菜单', key: 'dropdown' },
       { name: 'Flowchart ', nameCn: '流程图', key: 'flowchart' }
     ]
@@ -56,7 +62,6 @@ export const cmpMenus = [
       { name: 'DatePickerMobile', nameCn: '日期选择器', key: 'date-picker-mobile' },
       { name: 'DatePicker', nameCn: '日期选择器多端', key: 'date-picker' },
       { name: 'TimePickerMobile', nameCn: '时间选择器', key: 'time-picker-mobile' },
-      { name: 'Button', nameCn: '按钮', key: 'button' },
       { name: 'Checkbox', nameCn: '复选框', key: 'checkbox' },
       { name: 'FluentEditor', nameCn: '富文本', key: 'fluent-editor' },
       { name: 'Form', nameCn: '表单', key: 'form' },
@@ -68,6 +73,20 @@ export const cmpMenus = [
       { name: 'Select', nameCn: '选择器', key: 'select' },
       { name: 'SelectMobile', nameCn: '面板选择器', key: 'select-mobile' },
       { name: 'SelectView', nameCn: '页面选择器', key: 'select-view' },
+      {
+        'name': 'BaseSelect',
+        'nameCn': '基础选择器',
+        'key': 'base-select'
+      },
+      {
+        name: 'GridSelect',
+        nameCn: '下拉表格选择器',
+        key: 'grid-select',
+        meta: {
+          experimental: '3.27.0'
+        }
+      },
+      { name: 'TreeSelect', nameCn: '树形选择器', key: 'tree-select' },
       { name: 'Slider', nameCn: '滑块', key: 'slider' },
       { name: 'SliderButton', nameCn: '滑动按钮组', key: 'slider-button' },
       { name: 'Switch', nameCn: '开关', key: 'switch' },
@@ -78,7 +97,7 @@ export const cmpMenus = [
     ]
   },
   {
-    label: '数据组件',
+    label: '数据展示',
     labelEn: 'Data',
     key: 'cmp-data-components',
     children: [
@@ -86,7 +105,10 @@ export const cmpMenus = [
       { name: 'StandardListItem', nameCn: '标准列表项', key: 'standard-list-item' },
       { name: 'Progress', nameCn: '进度条', key: 'progress' },
       { name: 'PullRefresh', nameCn: '下拉刷新', key: 'pull-refresh' },
-      { name: 'Pager', nameCn: '分页', key: 'pager' }
+      { name: 'Pager', nameCn: '分页', key: 'pager' },
+      { name: 'TimeLine ', nameCn: '时间线', key: 'time-line' }
+      //  测试时打开该行---------------
+      // { name: 'TimeLineNew ', nameCn: '时间线AUI', key: 'time-line-new' },
     ]
   },
   {
@@ -96,7 +118,7 @@ export const cmpMenus = [
     'children': [{ 'nameCn': '基本用法', 'name': 'Grid', 'key': 'grid' }]
   },
   {
-    label: '提示组件',
+    label: '反馈',
     labelEn: 'Tooltip',
     key: 'cmp-tips-components',
     children: [
@@ -126,7 +148,8 @@ export const cmpMenus = [
       { name: 'currency', nameCn: '币种', key: 'currency' },
       { name: 'CalendarView', nameCn: '日历', key: 'calendar-view' },
       { name: 'FloatingButton', nameCn: '悬浮按钮', key: 'floating-button' },
-      { name: 'Divider', nameCn: '分割线', key: 'divider' }
+      { name: 'Divider', nameCn: '分割线', key: 'divider' },
+      { name: 'Space', nameCn: '间距', key: 'space' }
     ]
   }
 ]

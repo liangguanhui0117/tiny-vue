@@ -39,7 +39,8 @@ export const renderless = (props, hooks, { vm, emit, nextTick }) => {
   const state = reactive({
     items: [],
     navs: [],
-    currentItem: computed(() => state.items.find((item) => item.selected)),
+    currentItem: null,
+    cacheCurrentItem: computed(() => state.items.find((item) => item.selected)),
     key: computed(() => (state.currentItem ? state.currentItem.name : random())),
     separator: props.separator,
     swipeable: computed(() => api.computedSwipeable()),
@@ -56,7 +57,7 @@ export const renderless = (props, hooks, { vm, emit, nextTick }) => {
     addItem: addItem(state),
     addNav: addNav(state),
     scrollTo: scrollTo({ vm, state }),
-    removeItem: removeItem({ props, state, emit }),
+    removeItem: removeItem({ props, state, emit, api }),
     changeCurrentName: changeCurrentName({ state, emit }),
     clickMore: clickMore(api),
     beforeCarouselSwipe: beforeCarouselSwipe({ api, state, vm }),
@@ -90,11 +91,32 @@ export const renderless = (props, hooks, { vm, emit, nextTick }) => {
     (name) => name && api.setActive(name)
   )
 
+  // 监听 cacheCurrentItem 变化，确保 currentItem 及时更新
+  watch(
+    () => state.cacheCurrentItem,
+    (newItem) => {
+      if (newItem && newItem !== state.currentItem) {
+        state.currentItem = newItem
+      }
+    },
+    { immediate: true }
+  )
+
   onMounted(() => {
     // 在 vue2 类似 tabSwipe0 这些动态的 ref 只能在 nextTick 中拿到
-    nextTick(() => api.observeTabSwipeSize())
-    props.activeName && api.scrollTo(props.activeName)
-    props.modelValue && api.scrollTo(props.modelValue)
+    nextTick(() => {
+      api.observeTabSwipeSize()
+      // 确保 currentItem 已设置，如果还没有则使用 cacheCurrentItem
+      if (!state.currentItem && state.cacheCurrentItem) {
+        state.currentItem = state.cacheCurrentItem
+      }
+      // 如果没有 activeName 或 modelValue，且没有选中的 item，则设置第一个 item 为选中
+      if (!props.activeName && !props.modelValue && state.items.length > 0 && !state.cacheCurrentItem) {
+        api.changeCurrentName(state.items[0].name)
+      }
+      props.activeName && api.scrollTo(props.activeName)
+      props.modelValue && api.scrollTo(props.modelValue)
+    })
   })
 
   onBeforeUnmount(() => {

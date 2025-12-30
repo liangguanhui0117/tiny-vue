@@ -9,6 +9,14 @@
       <slot name="header-right" />
     </template>
   </ComponentHeader>
+  <div class="docs-content-tips" v-if="templateModeState.mode === 'mobile-first'">
+    <div>
+      <tiny-alert
+        description="温馨提示：多端打开演练场，移动左右面板的分隔线，可查看大小屏多端效果"
+        center
+      ></tiny-alert>
+    </div>
+  </div>
   <div class="docs-content" id="doc-layout-scroller" ref="scrollRef" @scroll="onDocLayoutScroll">
     <div class="ti-rel cmp-container">
       <div class="flex-horizontal docs-content-main">
@@ -75,16 +83,18 @@
         </div>
 
         <!-- demo与api目录锚点 -->
-        <aside-anchor
-          v-if="state.activeTab === 'demos' || state.activeTab === 'api'"
-          :active-tab="state.activeTab"
-          :current-json="state.currJson"
-          :anchor-affix="state.anchorAffix"
-          :api-types="state.currApiTypes"
-          :lang-key="state.langKey"
-          :key="anchorRefreshKey"
-          @link-click="handleAnchorClick"
-        ></aside-anchor>
+        <div class="cmp-page-anchor catalog">
+          <aside-anchor
+            v-if="state.activeTab === 'demos' || state.activeTab === 'api'"
+            :active-tab="state.activeTab"
+            :current-json="state.currJson"
+            :anchor-affix="state.anchorAffix"
+            :api-types="state.currApiTypes"
+            :lang-key="state.langKey"
+            :key="anchorRefreshKey"
+            @link-click="handleAnchorClick"
+          ></aside-anchor>
+        </div>
       </div>
 
       <div v-if="state.currJson.owner" class="ti-abs ti-right24 ti-top24" @click="copyText(state.currJson.owner)">
@@ -96,11 +106,11 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, watch, onMounted, nextTick, ref, onUnmounted } from 'vue'
+import { reactive, computed, watch, onMounted, nextTick, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { TinyTabs, TinyTabItem } from '@opentiny/vue'
+import { TinyTabs, TinyTabItem, TinyAlert } from '@opentiny/vue'
 import { debounce } from '@opentiny/utils'
-import { i18nByKey, getWord, $clone, useApiMode } from '@/tools'
+import { i18nByKey, getWord, $clone, useApiMode, useTemplateMode } from '@/tools'
 import { router } from '@/router.js'
 import { getWebdocPath } from './cmp-config'
 import DemoBox from '../../components/demo.vue'
@@ -112,7 +122,7 @@ import DesignToken from '../../components/design-token.vue'
 import McpDocs from '../../components/mcp-docs.vue'
 import useTasksFinish from '../../composable/useTasksFinish'
 import list from '@opentiny/vue-theme/token'
-import { cmpAnchorDataCallback } from '../../composable/useTinyRemoter'
+import { isSaas } from '../../const'
 import { getTinyVueMcpConfig } from '@opentiny/tiny-vue-mcp'
 import { camelize, capitalize } from '@vue/shared'
 
@@ -123,7 +133,7 @@ const emit = defineEmits(['single-demo-change', 'load-page'])
 defineOptions({
   name: 'CmpPageVue'
 })
-
+const { templateModeState } = useTemplateMode()
 const scrollRef = ref()
 const { apiModeState } = useApiMode()
 const isRunningTest = localStorage.getItem('tiny-e2e-test') === 'true'
@@ -206,7 +216,7 @@ const parseApiData = () => {
     for (const apiType of Object.keys(apiGroup)) {
       if (Array.isArray(apiGroup[apiType]) && apiGroup[apiType].length) {
         const apiArr = apiGroup[apiType].map((i) => {
-          const { name, type, defaultValue, desc, demoId, typeAnchorName, linkTo, meta, versionTipOption } = i
+          const { name, type, defaultValue, desc, demoId, typeAnchorName, linkTo, meta, versionTipOption, hideSaas } = i
           const item = {
             name,
             type,
@@ -216,7 +226,8 @@ const parseApiData = () => {
             meta,
             versionTipOption,
             typeAnchorName: '',
-            linkTo
+            linkTo,
+            hideSaas
           }
           if (typeAnchorName) {
             item.typeAnchorName = `${typeAnchorName?.includes('#') ? '' : '#'}${typeAnchorName}`
@@ -231,6 +242,15 @@ const parseApiData = () => {
     }
 
     tableData[apiGroup.name] = apiDisplay
+  }
+
+  // 当环境变量为tiny-vue-saas时
+  if (isSaas) {
+    for (const group of Object.keys(tableData)) {
+      for (const apiType of Object.keys(tableData[group])) {
+        tableData[group][apiType] = tableData[group][apiType].filter((item) => !item.hideSaas)
+      }
+    }
   }
   state.tableData = tableData
 }
@@ -302,7 +322,6 @@ const loadPage = () => {
     state.mdString = mdString
     // plus隐藏头部集合
     const hideTabHeader = ['interfaces', 'types', 'classes'].includes(state.cmpId)
-
     if (demosJson && !hideTabHeader) {
       // 默认设置每个实例demo都不和视图相交
       demosJson.demos?.forEach((item) => {
@@ -312,6 +331,12 @@ const loadPage = () => {
         ...demosJson,
         demos: $clone(demosJson.demos || []), // 克隆一下,避免保存上次的isOpen
         column: demosJson.column || '1' // columns可能为空
+      }
+      // saas 和 非saas 模式，展示的demos是不同的
+      if (isSaas) {
+        state.currJson.demos = state.currJson.demos.filter((d) => !d.hideSaas)
+      } else {
+        state.currJson.demos = state.currJson.demos.filter((d) => !d.hidePc)
       }
     } else {
       state.activeTab = 'api'
@@ -451,12 +476,6 @@ const handleAnchorClick = (e, data) => {
   }
 }
 
-// 页面加载时，创建一个返回 anchor data的函数。 这样工具调用时，可以拿到最新 anchor 信息
-cmpAnchorDataCallback.value = () => state.currJson.demos
-onUnmounted(() => {
-  cmpAnchorDataCallback.value = null
-})
-
 // MCP tab页签的数据
 const mcpTools = getTinyVueMcpConfig({ t: null })
 const capName = computed(() => capitalize(camelize(state.cmpId || '')))
@@ -480,6 +499,9 @@ defineExpose({ loadPage })
 </script>
 
 <style lang="less" scoped>
+.docs-content-tips {
+  width: 100%;
+}
 .docs-content {
   flex: 1;
   overflow: hidden auto;
@@ -511,7 +533,7 @@ defineExpose({ loadPage })
       z-index: var(--docs-tabs-header-zindex);
       background-color: var(--docs-color-bg);
 
-      &::after {
+      &::before {
         content: '';
         position: absolute;
         bottom: 0;
@@ -533,6 +555,57 @@ defineExpose({ loadPage })
       margin: 0;
       overflow: visible;
     }
+  }
+  .cmp-page-anchor {
+    :deep(.tiny-anchor__affix) {
+      top: unset !important;
+      overflow-y: auto;
+      overflow-x: hidden;
+      max-height: calc(100vh - 300px);
+    }
+
+    :deep(.tiny-anchor-link) {
+      font-size: 12px;
+
+      a {
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  .catalog {
+    flex: none;
+    width: 200px;
+    height: calc(100vh - 280px);
+    padding-top: 16px;
+    overflow: hidden;
+
+    .tiny-anchor__dot {
+      max-height: calc(100vh - 300px);
+      width: 200px;
+
+      :deep(.tiny-anchor) {
+        --ti-anchor-width: auto;
+        background-color: transparent;
+      }
+    }
+  }
+
+  .catalog:hover {
+    overflow-y: auto;
+  }
+
+  .catalog::-webkit-scrollbar {
+    width: 10px;
+    background-color: #f5f5f5;
+  }
+
+  .catalog::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #c1c1c1;
   }
 }
 

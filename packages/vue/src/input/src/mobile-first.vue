@@ -94,13 +94,15 @@
                   ? 'h-6 leading-6 text-xs placeholder:text-xs'
                   : 'h-7 leading-7',
               slots.prepend || slots.append ? 'align-middle table-cell' : 'inline-block',
-              slots.prepend && slots.append
-                ? 'rounded-none'
-                : slots.prepend
-                  ? 'rounded-tl-none rounded-bl-none rounded-tr rounded-br'
-                  : slots.append
-                    ? 'rounded-tl rounded-bl rounded-tr-none rounded-br-none'
-                    : 'rounded',
+              inputBoxType === 'underline'
+                ? 'rounded-none border-t-0 border-l-0 border-r-0 border-b sm:border-b'
+                : slots.prepend && slots.append
+                  ? 'rounded-none'
+                  : slots.prepend
+                    ? 'rounded-tl-none rounded-bl-none rounded-tr rounded-br'
+                    : slots.append
+                      ? 'rounded-tl rounded-bl rounded-tr-none rounded-br-none'
+                      : 'rounded',
               readonly ? ' text-ellipsis overflow-hidden whitespace-nowrap' : 'sm:border',
               (slots.prefix || prefixIcon) && (slots.suffix || suffixIcon || clearable || showPassword)
                 ? 'px-6 sm:px-6'
@@ -133,7 +135,7 @@
           @focus="handleFocus"
           @blur="handleBlur"
           @change="handleChange"
-          :aria-label="label"
+          :aria-label="label || $attrs.placeholder"
           @keyup="$emit('keyup', $event)"
           @keydown="$emit('keydown', $event)"
           @paste="$emit('paste', $event)"
@@ -181,6 +183,9 @@
                 state.inputSizeMf === 'medium' ? 'leading-8' : state.inputSizeMf === 'mini' ? 'leading-6' : 'leading-7'
               )
             "
+            role="button"
+            aria-label="clear"
+            tabindex="0"
             @mousedown.prevent
             @click="clear"
           ></icon-close>
@@ -209,6 +214,9 @@
                 state.inputSizeMf === 'medium' ? 'leading-8' : state.inputSizeMf === 'mini' ? 'leading-6' : 'leading-7'
               )
             "
+            role="button"
+            aria-label="clear"
+            tabindex="0"
             @mousedown.prevent
             @click="clear"
           ></icon-error>
@@ -221,6 +229,9 @@
                 state.inputSizeMf === 'medium' ? 'leading-8' : state.inputSizeMf === 'mini' ? 'leading-6' : 'leading-7'
               )
             "
+            role="button"
+            :aria-label="state.passwordVisible ? 'hide password' : 'show password'"
+            tabindex="0"
             @click.native="handlePasswordVisible"
           ></component>
           <component
@@ -232,11 +243,17 @@
                 state.inputSizeMf === 'medium' ? 'leading-8' : state.inputSizeMf === 'mini' ? 'leading-6' : 'leading-7'
               )
             "
+            role="button"
+            :aria-label="state.maskValueVisible ? 'hide content' : 'show content'"
+            tabindex="0"
             @click.native="state.maskValueVisible = !state.maskValueVisible"
           ></component>
           <span
             v-if="state.isWordLimitVisible"
+            :id="`${$attrs.id || name || 'input'}-word-limit`"
             class="h-full inline-flex items-center text-xs sm:text-sm text-color-text-placeholder"
+            role="status"
+            aria-live="polite"
           >
             <span class="bg-color-bg-1 leading-none inline-block text-xs">{{
               state.showWordLimit ? `${state.textLength}/${state.upperLimit}` : state.textLength
@@ -347,14 +364,17 @@
         @change="handleChange"
         @mouseenter="handleEnterTextarea($event)"
         @mouseleave="handleLeaveTextarea($event)"
-        :aria-label="label"
+        :aria-label="label || $attrs.placeholder"
       >
       </textarea>
     </span>
     <span
       data-tag="tiny-input-limit"
       v-if="state.isWordLimitVisible && type === 'textarea'"
+      :id="`${$attrs.id || name || 'textarea'}-word-limit`"
       class="text-color-text-placeholder text-xs leading-5 absolute bottom-0 right-3"
+      role="status"
+      aria-live="polite"
       >{{ state.showWordLimit ? `${state.textLength}/${state.upperLimit}` : state.textLength }}</span
     >
     <slot></slot>
@@ -427,7 +447,8 @@ export default defineComponent({
     'popupMore',
     'showTooltip',
     'frontClearIcon',
-    'hoverExpand'
+    'hoverExpand',
+    'inputBoxType'
   ],
   setup(props, context): any {
     return setup({ props, context, renderless, api })

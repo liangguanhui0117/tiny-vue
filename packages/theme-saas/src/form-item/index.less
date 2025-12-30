@@ -185,6 +185,10 @@
     @apply whitespace-nowrap;
     @apply text-ellipsis;
     @apply text-right;
+
+    &.is-disabled {
+      @apply text-color-text-disabled;
+    }
   }
 
   &__content {
@@ -194,6 +198,9 @@
 
     .@{input-prefix-cls} {
       @apply inline-block;
+      &.@{input-group-prefix-cls} {
+        @apply inline-table;
+      }
       &.@{range-editor-prefix-cls}.@{input-prefix-cls}__inner {
         @apply inline-flex;
       }

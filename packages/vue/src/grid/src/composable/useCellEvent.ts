@@ -11,7 +11,7 @@ const getEventSource = (e, $table) => {
   if (tableEl.dataset?.tableid !== String($table.id)) return
 
   let cellEl = target.closest('.tiny-grid-header__column')
-  let rowEl, part, rowType, row, column
+  let rowEl, part, rowType, row, column, rowid
 
   if (cellEl) {
     rowEl = cellEl.parentNode
@@ -27,12 +27,19 @@ const getEventSource = (e, $table) => {
   if (!part || !cellEl || !rowEl) return
 
   column = $table.getColumnNode(cellEl)?.item
+  rowid = rowEl.dataset?.rowid
 
-  if (rowEl.dataset?.rowid?.startsWith('row_g_')) {
+  if (rowid?.startsWith('row_g_')) {
     rowType = 'virtual'
   } else if (part === 'body') {
     rowType = 'normal'
-    row = $table.getRowNode(rowEl)?.item
+
+    if ($table.editStore.insertMap.has(rowid)) {
+      // 新增行不进缓存，需要单独查找
+      row = $table.editStore.insertMap.get(rowid)
+    } else {
+      row = $table.getRowNode(rowEl)?.item
+    }
   }
 
   return { part, rowType, row, column, cell: cellEl, tr: rowEl }
@@ -111,6 +118,38 @@ const isOperateMouse = ($table) => {
   return (
     $table._isResize || ($table.lastScrollTime && Date.now() < $table.lastScrollTime + $table.optimizeOpts.delayHover)
   )
+}
+
+const hideAlignLines = ($table, cell) => {
+  if (!$table.mouseConfig?.hover || cell) {
+    return
+  }
+  const xBar = $table.elemStore['main-body-alignXBar']
+  const yBar = $table.elemStore['main-body-alignYBar']
+  if (xBar) {
+    xBar.style.display = 'none'
+  }
+  if (yBar) {
+    yBar.style.display = 'none'
+  }
+}
+
+const showAlignLines = ($table, cell) => {
+  if (!$table.mouseConfig?.hover) {
+    return
+  }
+  const xBar = $table.elemStore['main-body-alignXBar']
+  const yBar = $table.elemStore['main-body-alignYBar']
+  if (xBar) {
+    xBar.style.display = 'block'
+    xBar.style.top = cell.offsetTop - 1 + 'px'
+    xBar.style.setProperty('--after-top-offset', cell.offsetHeight + 'px')
+  }
+  if (yBar) {
+    yBar.style.display = 'block'
+    yBar.style.left = cell.offsetLeft - 1 + 'px'
+    yBar.style.setProperty('--after-left-offset', cell.offsetWidth + 'px')
+  }
 }
 
 export const useCellEvent = ({ table, $table }) => {
@@ -357,6 +396,7 @@ export const useCellEvent = ({ table, $table }) => {
         if (tableListeners['cell-mouseleave']) {
           emitEvent($table, 'cell-mouseleave', [params, e])
         }
+        hideAlignLines($table, curCell)
       }
     }
 
@@ -369,6 +409,7 @@ export const useCellEvent = ({ table, $table }) => {
         if (tableListeners['cell-mouseenter']) {
           emitEvent($table, 'cell-mouseenter', [params, e])
         }
+        showAlignLines($table, curCell)
       }
     }
   })

@@ -194,6 +194,33 @@ export default {
           },
           mode: ['pc'],
           pcDemo: 'z-index'
+        },
+        {
+          name: 'tips-props',
+          type: 'ITipsProps',
+          typeAnchorName: 'ITipsProps',
+          defaultValue: '',
+          desc: {
+            'zh-CN': '可自定义标题帮助提示信息',
+            'en-US': 'Customizable title help prompt information'
+          },
+          mode: ['pc'],
+          pcDemo: 'tips-props',
+          hideSaas: true
+        },
+        {
+          name: 'close-on-press-escape',
+          type: 'boolean',
+          defaultValue: 'false',
+          desc: {
+            'zh-CN': 'ESC 键关闭抽屉',
+            'en-US': 'ESC key to close drawer'
+          },
+          mode: ['pc'],
+          pcDemo: 'closeOnPressEscape',
+          meta: {
+            stable: '3.28.0'
+          }
         }
       ],
       events: [
@@ -326,6 +353,15 @@ export default {
     }
   ],
   types: [
+    {
+      name: 'ITipsProps',
+      type: 'interface',
+      code: `interface ITipsProps {
+        content?: string
+        placement?: string
+        effect?: string
+      }`
+    },
     {
       name: 'IDrawerConfigs',
       type: 'interface',
